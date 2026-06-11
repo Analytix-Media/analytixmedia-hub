@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="robots" content="noindex, nofollow">
+  <title>Analytix Hub</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+  <!-- ═══ LOGIN SCREEN ═══ -->
+  <div id="login-screen" class="login-screen">
+    <div class="login-card">
+      <div class="login-logo">
+        <div class="logo-mark">A</div>
+        <div class="login-brand">
+          <span class="login-brand-name">Analytix Hub</span>
+          <span class="login-brand-sub">Internal tools</span>
+        </div>
+      </div>
+      <form id="login-form" class="login-form">
+        <input
+          id="password-input"
+          type="password"
+          class="login-input"
+          placeholder="Enter password"
+          autocomplete="current-password"
+          autofocus
+        >
+        <div id="login-error" class="login-error hidden">Incorrect password</div>
+        <button type="submit" class="btn btn-primary btn-full">Unlock →</button>
+      </form>
+      <p class="login-hint">Session remembered for 30 days</p>
+    </div>
+  </div>
+
+  <!-- ═══ APP SHELL ═══ -->
+  <div id="app" class="app hidden">
+
+    <!-- Sidebar -->
+    <aside class="sidebar">
+      <!-- Logo -->
+      <div class="sidebar-logo">
+        <div class="logo-mark logo-mark-sm">A</div>
+        <div>
+          <div class="sidebar-brand-name">Analytix Hub</div>
+          <div class="sidebar-brand-sub">internal tools</div>
+        </div>
+      </div>
+
+      <!-- Nav sections -->
+      <nav class="sidebar-nav">
+        <div class="nav-label">Sections</div>
+        <button class="nav-item active" data-section="live">
+          <span class="nav-icon">⚡</span>
+          <span class="nav-text">Live</span>
+          <span class="nav-badge" id="badge-live">0</span>
+        </button>
+        <button class="nav-item" data-section="beta">
+          <span class="nav-icon">🧪</span>
+          <span class="nav-text">Beta</span>
+          <span class="nav-badge" id="badge-beta">0</span>
+        </button>
+        <button class="nav-item" data-section="ideas">
+          <span class="nav-icon">💡</span>
+          <span class="nav-text">Ideas</span>
+          <span class="nav-badge" id="badge-ideas">0</span>
+        </button>
+        <button class="nav-item" data-section="archive">
+          <span class="nav-icon">🗄</span>
+          <span class="nav-text">Archive</span>
+          <span class="nav-badge" id="badge-archive">0</span>
+        </button>
+      </nav>
+
+      <!-- Quick links -->
+      <div class="sidebar-links">
+        <div class="sidebar-links-header">
+          <div class="nav-label">Quick links</div>
+          <button id="add-quicklink-btn" class="add-quicklink-btn" title="Add quick link">+</button>
+        </div>
+        <div id="quick-links-list"></div>
+      </div>
+
+      <!-- Settings + Lock -->
+      <div class="sidebar-footer">
+        <div class="sidebar-storage" id="sidebar-storage" title="Local storage used">
+          <div class="sidebar-storage-bar">
+            <div class="sidebar-storage-fill" id="sidebar-storage-fill"></div>
+          </div>
+          <span class="sidebar-storage-label" id="sidebar-storage-label">— KB / 5 MB</span>
+          <span id="neon-status" class="neon-status"></span>
+        </div>
+        <button id="settings-nav-btn" class="settings-nav-btn">⚙ Settings</button>
+        <button id="lock-btn" class="lock-btn">🔒 Lock hub</button>
+      </div>
+    </aside>
+
+    <!-- Main content -->
+    <div class="main">
+
+      <!-- ── APPS SECTION (Live / Beta / Archive) ── -->
+      <div id="section-apps" class="section-apps">
+        <div class="main-topbar">
+          <div id="section-title" class="section-title">⚡ Live tools</div>
+          <div class="topbar-actions">
+            <div class="search-wrap">
+              <input id="search-input" type="text" class="search-input" placeholder="Search tools…">
+            </div>
+            <select id="category-filter" class="category-filter" style="display:none">
+              <option value="">All categories</option>
+            </select>
+            <div class="sort-pills" id="sort-pills">
+              <button class="sort-pill active" data-sort="manual">Custom</button>
+              <button class="sort-pill" data-sort="name-asc">A → Z</button>
+              <button class="sort-pill" data-sort="name-desc">Z → A</button>
+            </div>
+            <button id="arrange-btn" class="btn btn-ghost btn-sm" title="Drag to reorder">⠿ Arrange</button>
+            <button id="add-tool-btn" class="btn btn-primary">+ Add tool</button>
+          </div>
+        </div>
+
+        <!-- Saved views bar -->
+        <div id="views-bar" class="views-bar hidden">
+          <span class="views-bar-label">Views</span>
+          <div id="views-chips" class="views-chips"></div>
+          <button id="save-view-btn" class="views-save-btn">+ Save view</button>
+        </div>
+
+        <div id="tools-grid" class="tools-grid">
+          <!-- cards injected by JS -->
+        </div>
+      </div>
+
+      <!-- ── SETTINGS SECTION ── -->
+      <div id="section-settings" class="section-settings hidden">
+        <!-- injected by renderSettings() -->
+      </div>
+
+      <!-- ── IDEAS SECTION ── -->
+      <div id="section-ideas-pane" class="section-ideas hidden">
+        <div class="notes-list-pane">
+          <div class="notes-list-header">
+            <span class="notes-count" id="notes-count">Notes (0)</span>
+            <button id="new-note-btn" class="btn btn-primary btn-sm">+ New</button>
+          </div>
+          <div id="notes-list" class="notes-list">
+            <!-- note rows injected by JS -->
+          </div>
+        </div>
+        <div class="notes-editor-pane">
+          <div id="note-placeholder" class="note-placeholder">
+            <div class="note-placeholder-icon">💡</div>
+            <p>Select a note or create a new one</p>
+          </div>
+          <div id="note-editor" class="note-editor hidden">
+            <div class="note-editor-toprow">
+              <div class="note-meta" id="note-meta"></div>
+              <span id="note-save-status" class="note-save-status"></span>
+            </div>
+            <input id="note-title" type="text" class="note-title-input" placeholder="Note title…">
+
+            <div class="note-rte-toolbar">
+              <button type="button" class="note-rte-btn" data-cmd="formatBlock" data-val="h1" title="Heading 1">H1</button>
+              <button type="button" class="note-rte-btn" data-cmd="formatBlock" data-val="h2" title="Heading 2">H2</button>
+              <button type="button" class="note-rte-btn" data-cmd="formatBlock" data-val="h3" title="Heading 3">H3</button>
+              <span class="note-rte-sep"></span>
+              <button type="button" class="note-rte-btn" data-cmd="bold" title="Bold"><strong>B</strong></button>
+              <button type="button" class="note-rte-btn" data-cmd="italic" title="Italic"><em>I</em></button>
+              <button type="button" class="note-rte-btn" data-cmd="underline" title="Underline"><u>U</u></button>
+              <button type="button" class="note-rte-btn" data-cmd="strikeThrough" title="Strikethrough"><s>S</s></button>
+              <span class="note-rte-sep"></span>
+              <button type="button" class="note-rte-btn" data-cmd="insertUnorderedList" title="Bullet list">•≡</button>
+              <button type="button" class="note-rte-btn" data-cmd="insertOrderedList" title="Numbered list">1≡</button>
+              <button type="button" class="note-rte-btn" data-cmd="formatBlock" data-val="blockquote" title="Quote">"</button>
+              <span class="note-rte-sep"></span>
+              <button type="button" class="note-rte-btn" data-cmd="insertHorizontalRule" title="Horizontal rule">—</button>
+              <button type="button" class="note-rte-btn" id="note-link-btn" title="Insert link">🔗</button>
+              <span class="note-rte-sep"></span>
+              <button type="button" class="note-rte-btn" id="note-img-btn" title="Upload image">🖼</button>
+              <button type="button" class="note-rte-btn" id="note-file-btn" title="Attach file">📎</button>
+              <span class="note-rte-sep"></span>
+              <button type="button" class="note-rte-btn" data-cmd="removeFormat" title="Clear formatting">✕</button>
+            </div>
+
+            <div id="note-body" class="note-body-rte" contenteditable="true"
+              data-placeholder="Start writing… paste or drag screenshots, attach files"></div>
+
+            <input type="file" id="note-img-input" accept="image/*" multiple style="display:none">
+            <input type="file" id="note-file-input" multiple style="display:none">
+
+            <div class="note-editor-actions">
+              <button id="save-note-btn" class="btn btn-primary btn-sm">Save</button>
+              <button id="delete-note-btn" class="btn btn-ghost btn-sm">Delete</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ═══ QUICK LINK MODAL ═══ -->
+  <div id="ql-modal-overlay" class="modal-overlay hidden">
+    <div class="modal" style="width:360px">
+      <div class="modal-header">
+        <h3 id="ql-modal-title">Add quick link</h3>
+        <button id="ql-modal-close" class="modal-close">✕</button>
+      </div>
+      <div class="modal-body">
+        <label class="field-label">Label</label>
+        <input id="ql-label" type="text" class="field-input" placeholder="e.g. Google Drive">
+        <label class="field-label">URL</label>
+        <input id="ql-url" type="url" class="field-input" placeholder="https://…">
+      </div>
+      <div class="modal-footer">
+        <button id="ql-delete" class="btn btn-danger hidden">Delete</button>
+        <div style="flex:1"></div>
+        <button id="ql-cancel" class="btn btn-ghost">Cancel</button>
+        <button id="ql-save" class="btn btn-primary">Save</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══ ADD / EDIT TOOL MODAL ═══ -->
+  <div id="modal-overlay" class="modal-overlay hidden">
+    <div class="modal">
+      <div class="modal-header">
+        <h3 id="modal-title">Add tool</h3>
+        <button id="modal-close" class="modal-close">✕</button>
+      </div>
+      <div class="modal-body">
+        <label class="field-label">Name</label>
+        <input id="tool-name" type="text" class="field-input" placeholder="e.g. Intake Hub">
+
+        <label class="field-label">Description</label>
+        <input id="tool-desc" type="text" class="field-input" placeholder="One-line description">
+
+        <label class="field-label">URL</label>
+        <input id="tool-url" type="url" class="field-input" placeholder="https://…">
+
+        <label class="field-label">Icon</label>
+        <div class="icon-picker">
+          <div class="icon-preview" id="icon-preview">🔧</div>
+          <div class="icon-picker-right">
+            <div class="icon-upload-row">
+              <input type="file" id="tool-favicon" accept="image/*,image/x-icon,.ico" style="display:none">
+              <button type="button" class="btn btn-ghost btn-sm" id="favicon-upload-btn">↑ Upload favicon</button>
+              <button type="button" class="btn btn-ghost btn-sm hidden" id="favicon-clear-btn">✕ Remove</button>
+            </div>
+            <div class="icon-or">or use emoji</div>
+            <input id="tool-icon" type="text" class="field-input field-short" placeholder="📋" maxlength="4">
+          </div>
+        </div>
+
+        <label class="field-label">Section</label>
+        <select id="tool-section" class="field-input">
+          <option value="live">⚡ Live</option>
+          <option value="beta">🧪 Beta</option>
+          <option value="archive">🗄 Archive</option>
+        </select>
+
+        <label class="field-label">Access</label>
+        <select id="tool-access" class="field-input">
+          <option value="protected">🔑 Password protected</option>
+          <option value="public">🌐 Public</option>
+        </select>
+
+        <label class="field-label">Stage</label>
+        <select id="tool-stage" class="field-input">
+          <option value="">— None —</option>
+          <option value="idea">Idea</option>
+          <option value="scoping">Scoping</option>
+          <option value="concept">Concept</option>
+          <option value="designing">Designing</option>
+          <option value="building">Building</option>
+          <option value="review">Review</option>
+          <option value="testing">Testing</option>
+          <option value="beta">Beta</option>
+          <option value="ready">Ready to Launch</option>
+          <option value="paused">Paused</option>
+          <option value="blocked">Blocked</option>
+        </select>
+
+        <label class="field-label">Category</label>
+        <input id="tool-category" type="text" class="field-input" placeholder="e.g. Marketing — type to create new" list="category-options" autocomplete="off">
+        <datalist id="category-options"></datalist>
+
+        <div class="notes-field">
+          <div class="notes-field-header">
+            <span class="field-label" style="margin:0">Notes</span>
+            <div class="rte-toolbar">
+              <button type="button" class="rte-btn" data-cmd="bold" title="Bold"><strong>B</strong></button>
+              <button type="button" class="rte-btn" data-cmd="italic" title="Italic"><em>I</em></button>
+              <span class="rte-sep"></span>
+              <button type="button" class="rte-btn" data-cmd="insertUnorderedList" title="Bullet list">•≡</button>
+              <button type="button" class="rte-btn" data-cmd="insertOrderedList" title="Numbered list">1≡</button>
+              <span class="rte-sep"></span>
+              <button type="button" class="rte-btn" data-cmd="removeFormat" title="Clear formatting">✕</button>
+            </div>
+          </div>
+          <div id="tool-notes" class="rte-editor" contenteditable="true" data-placeholder="Add notes, links, context…"></div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button id="modal-delete" class="btn btn-danger hidden">Delete</button>
+        <div style="flex:1"></div>
+        <button id="modal-cancel" class="btn btn-ghost">Cancel</button>
+        <button id="modal-save" class="btn btn-primary">Save tool</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Floating image resize toolbar (shown on image click in notes) -->
+  <div id="note-img-toolbar" class="note-img-toolbar hidden">
+    <button type="button" id="img-tb-shrink" title="Smaller">−</button>
+    <div class="note-img-tb-sep"></div>
+    <button type="button" id="img-tb-25" title="25%">¼</button>
+    <button type="button" id="img-tb-50" title="50%">½</button>
+    <button type="button" id="img-tb-75" title="75%">¾</button>
+    <button type="button" id="img-tb-full" title="Full width">⤢</button>
+    <div class="note-img-tb-sep"></div>
+    <button type="button" id="img-tb-grow" title="Larger">+</button>
+    <div class="note-img-tb-sep"></div>
+    <button type="button" id="img-tb-delete" title="Remove image">🗑</button>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>

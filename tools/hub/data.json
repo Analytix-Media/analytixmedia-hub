@@ -1,0 +1,44 @@
+{
+  "hubData": 1,
+  "publishedAt": "2026-06-11T00:00:00.000Z",
+  "apps": [
+    { "id": "intake-hub",         "name": "Intake Hub",             "desc": "Client intake workspace — plans, research, tasks.",             "icon": "📋", "url": "#", "section": "live",    "access": "protected", "stage": "", "notes": "", "favicon": null, "favorite": false },
+    { "id": "client-dashboard",   "name": "Client Dashboard",       "desc": "Campaign performance reports for clients.",                     "icon": "📊", "url": "#", "section": "live",    "access": "protected", "stage": "", "notes": "", "favicon": null, "favorite": false },
+    { "id": "email-builder",      "name": "Email Builder",          "desc": "Drag-drop email template generator.",                           "icon": "✉️",  "url": "#", "section": "live",    "access": "public",    "stage": "", "notes": "", "favicon": null, "favorite": false },
+    { "id": "brand-kit",          "name": "Brand Kit",              "desc": "Logos, colors, tokens — single source of truth.",               "icon": "🎨", "url": "#", "section": "live",    "access": "protected", "stage": "", "notes": "", "favicon": null, "favorite": false },
+    { "id": "seo-auditor",        "name": "SEO Auditor",            "desc": "Quick site audits with exportable reports.",                    "icon": "🔍", "url": "#", "section": "live",    "access": "protected", "stage": "", "notes": "", "favicon": null, "favorite": false },
+    { "id": "ai-reports",         "name": "AI Report Generator",    "desc": "Auto-pull GA4 data → monthly client report drafts via Claude.", "icon": "🤖", "url": "#", "section": "beta",    "access": "protected", "stage": "building",  "notes": "<ul><li>Connect GA4 API for traffic + conversion pulls</li><li>Template per client type (ecom / lead-gen / local)</li><li>Export to branded PDF</li></ul>", "favicon": null, "favorite": false },
+    { "id": "client-portal-v2",   "name": "Client Portal v2",       "desc": "White-label client portal with SSO and custom domain.",         "icon": "🏠", "url": "#", "section": "beta",    "access": "protected", "stage": "designing", "notes": "<ul><li>White-label subdomain support</li><li>Google SSO for client login</li><li>Embed existing dashboard + reports</li></ul>", "favicon": null, "favorite": false },
+    { "id": "proposal-builder",   "name": "Proposal Builder",       "desc": "AI-assisted proposal generator from a discovery call brief.",   "icon": "📝", "url": "#", "section": "beta",    "access": "protected", "stage": "concept",   "notes": "<p>Paste discovery notes → AI drafts scope, pricing, timeline. Export to branded PDF or Notion.</p>", "favicon": null, "favorite": false },
+    { "id": "competitor-tracker", "name": "Competitor Tracker",     "desc": "Weekly automated competitor analysis — SEO, ads, content.",    "icon": "📈", "url": "#", "section": "beta",    "access": "protected", "stage": "testing",   "notes": "", "favicon": null, "favorite": false },
+    { "id": "link-monitor",       "name": "Link Monitor",           "desc": "Broken link + redirect checker with weekly email digest.",      "icon": "🔗", "url": "#", "section": "beta",    "access": "protected", "stage": "beta",      "notes": "", "favicon": null, "favorite": false },
+    { "id": "legacy-email",       "name": "Legacy Email Tool",      "desc": "Old email builder — replaced by Email Builder.",                "icon": "📧", "url": "#", "section": "archive", "access": "protected", "stage": "", "notes": "", "favicon": null, "favorite": false },
+    { "id": "manual-analytics",   "name": "Manual Analytics Sheet", "desc": "Google Sheet reporting — replaced by Client Dashboard.",       "icon": "📉", "url": "#", "section": "archive", "access": "protected", "stage": "", "notes": "", "favicon": null, "favorite": false }
+  ],
+  "quickLinks": [
+    { "id": "ql-1", "label": "🌐 analytixmedia.com", "url": "https://analytixmedia.com" },
+    { "id": "ql-2", "label": "📁 Google Drive",       "url": "https://drive.google.com" },
+    { "id": "ql-3", "label": "📋 ClickUp",            "url": "https://app.clickup.com" }
+  ],
+  "notes": [
+    { "id": "note-1", "title": "AI report generator idea",   "body": "Auto-pull GA4 data and generate monthly client report draft with Claude.<br><br>- Connect GA4 API for traffic + conversions<br>- Template per client type (ecom / lead-gen / local)<br>- Export to branded PDF", "created": 1749340800000, "updated": 1749384000000 },
+    { "id": "note-2", "title": "Client portal v2 features",  "body": "White-label option for agencies reselling our services.<br><br>- Custom subdomain<br>- Google SSO<br>- Embedded dashboard", "created": 1749168000000, "updated": 1749340800000 },
+    { "id": "note-3", "title": "Pricing page experiments",   "body": "Three-tier vs usage-based pricing.<br><br>Test with Hotjar heatmaps. Run for 30 days then decide.", "created": 1748649600000, "updated": 1748995200000 },
+    { "id": "note-4", "title": "Automation wishlist",        "body": "Make.com scenarios we want to build:<br><br>- New client → create ClickUp project + Notion brief<br>- Weekly SEO digest → Slack<br>- Invoice paid → update client status", "created": 1748044800000, "updated": 1748822400000 },
+    { "id": "note-5", "title": "SEO content brief tool",     "body": "Input: target keyword + competitor URLs<br>Output: content brief with headings, word count, internal link suggestions<br><br>Could use Claude + Serper API.", "created": 1747526400000, "updated": 1748476800000 }
+  ],
+  "stages": {
+    "idea":      { "label": "Idea",            "bg": "#F8FAFC", "fg": "#64748B" },
+    "scoping":   { "label": "Scoping",         "bg": "#EFF6FF", "fg": "#1E40AF" },
+    "concept":   { "label": "Concept",         "bg": "#F3F4F6", "fg": "#6B7280" },
+    "designing": { "label": "Designing",       "bg": "#EDE9FE", "fg": "#6D28D9" },
+    "building":  { "label": "Building",        "bg": "#FEF3C7", "fg": "#92400E" },
+    "review":    { "label": "Review",          "bg": "#EEF2FF", "fg": "#4338CA" },
+    "testing":   { "label": "Testing",         "bg": "#FFF7ED", "fg": "#C2410C" },
+    "beta":      { "label": "Beta",            "bg": "#CFFAFE", "fg": "#0E7490" },
+    "ready":     { "label": "Ready to Launch", "bg": "#F0FDF4", "fg": "#166534" },
+    "paused":    { "label": "Paused",          "bg": "#FEF9C3", "fg": "#854D0E" },
+    "blocked":   { "label": "Blocked",         "bg": "#FEF2F2", "fg": "#B91C1C" }
+  },
+  "savedViews": []
+}

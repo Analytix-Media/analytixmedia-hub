@@ -1,0 +1,16 @@
+# ─── Secrets — never commit ───
+.env
+.env.*
+
+# ─── OS / local ───
+.DS_Store
+**/.DS_Store
+node_modules/
+
+# ─── Local tooling (not part of the hub) ───
+.claude/
+.superpowers/
+
+# ─── Other apps / content in this folder — hub repo only ───
+research-and-planning/
+tools/intake-hub/
