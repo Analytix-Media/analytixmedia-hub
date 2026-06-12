@@ -15,3 +15,6 @@ CLAUDE.md
 # ─── Other apps / content in this folder — hub repo only ───
 research-and-planning/
 tools/intake-hub/
+
+# Local Netlify folder
+.netlify
