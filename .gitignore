@@ -10,6 +10,7 @@ node_modules/
 # ─── Local tooling (not part of the hub) ───
 .claude/
 .superpowers/
+CLAUDE.md
 
 # ─── Other apps / content in this folder — hub repo only ───
 research-and-planning/
