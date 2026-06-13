@@ -111,6 +111,7 @@
             <div class="search-wrap">
               <input id="search-input" type="text" class="search-input" placeholder="Search tools…">
             </div>
+            <div id="audience-filter" class="audience-filter" style="display:none"></div>
             <select id="category-filter" class="category-filter" style="display:none">
               <option value="">All categories</option>
             </select>
@@ -269,6 +270,18 @@
           <option value="protected">🔑 Password protected</option>
           <option value="public">🌐 Public</option>
         </select>
+
+        <label class="field-label">Audience</label>
+        <select id="tool-audience" class="field-input">
+          <option value="internal">🏢 Internal — our team</option>
+          <option value="client">🤝 Client — built for a client (private)</option>
+          <option value="public">🌍 Public — publicly available</option>
+        </select>
+
+        <div id="tool-client-name-row" class="hidden">
+          <label class="field-label">Client name</label>
+          <input id="tool-client-name" type="text" class="field-input" placeholder="e.g. Acme Corp">
+        </div>
 
         <label class="field-label">Stage</label>
         <select id="tool-stage" class="field-input">

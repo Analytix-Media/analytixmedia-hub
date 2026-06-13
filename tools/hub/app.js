@@ -103,23 +103,88 @@ function setCategoryFilter(cat) {
   renderApps();
 }
 
+// ─── Audience ────────────────────────────────────────────────────────────────
+// Who an app is FOR — distinct from `access` (which is auth: login vs public).
+// internal = team tools · client = built for a specific client (private) · public.
+// Apps saved before this field default to `internal`.
+const AUDIENCES = {
+  internal: { label: 'Internal', icon: '🏢', bg: '#F1F5F9', fg: '#475569' },
+  client:   { label: 'Client',   icon: '🤝', bg: '#EDE9FE', fg: '#6D28D9' },
+  public:   { label: 'Public',   icon: '🌍', bg: '#ECFDF5', fg: '#047857' },
+};
+const AUDIENCE_ORDER = ['internal', 'client', 'public'];
+
+function appAudience(app) {
+  return AUDIENCES[app && app.audience] ? app.audience : 'internal';
+}
+
+function audienceBadgeHtml(app) {
+  const key = appAudience(app);
+  const a = AUDIENCES[key];
+  let label = a.label;
+  if (key === 'client' && app.clientName && app.clientName.trim()) {
+    label += ' · ' + escHtml(app.clientName.trim());
+  }
+  return `<span class="audience-badge" style="background:${a.bg};color:${a.fg}">${a.icon} ${label}</span>`;
+}
+
+function audienceChipHtml(app) {
+  const key = appAudience(app);
+  const a = AUDIENCES[key];
+  let label = a.label;
+  if (key === 'client' && app.clientName && app.clientName.trim()) {
+    label += ' · ' + escHtml(app.clientName.trim());
+  }
+  return `<span class="meta-chip" style="background:${a.bg};color:${a.fg};border-color:transparent">${a.icon} ${label}</span>`;
+}
+
+function renderAudienceFilter() {
+  const bar = document.getElementById('audience-filter');
+  if (!bar) return;
+  const inSection = state.apps.filter(a => a.section === state.section);
+  // Hide the control entirely in Ideas (notes) and when nothing to filter.
+  if (state.section === 'ideas' || inSection.length === 0) {
+    bar.style.display = 'none';
+    bar.innerHTML = '';
+    return;
+  }
+  bar.style.display = '';
+  const cur = state.audienceFilter;
+  const allActive = !cur;
+  let html = `<button class="audience-pill ${allActive ? 'active' : ''}" onclick="setAudienceFilter(null)">All</button>`;
+  html += AUDIENCE_ORDER.map(key => {
+    const a = AUDIENCES[key];
+    const count = inSection.filter(app => appAudience(app) === key).length;
+    const active = cur === key;
+    return `<button class="audience-pill ${active ? 'active' : ''}" onclick="setAudienceFilter('${key}')"
+      style="${active ? `background:${a.bg};color:${a.fg}` : ''}"
+    >${a.icon} ${a.label}${count > 0 ? ` <span class="audience-pill-count">${count}</span>` : ''}</button>`;
+  }).join('');
+  bar.innerHTML = html;
+}
+
+function setAudienceFilter(key) {
+  state.audienceFilter = key || null;
+  renderApps();
+}
+
 // ─── Default seed data ───────────────────────────────────────────────────────
 const SEED_APPS = [
   // Live
-  { id: 'intake-hub',        name: 'Intake Hub',           desc: 'Client intake workspace — plans, research, tasks.',          icon: '📋', url: '#', section: 'live',    access: 'protected', stage: '', category: 'Client Ops', notes: '', favicon: null },
-  { id: 'client-dashboard',  name: 'Client Dashboard',     desc: 'Campaign performance reports for clients.',                  icon: '📊', url: '#', section: 'live',    access: 'protected', stage: '', category: 'Reporting', notes: '', favicon: null },
-  { id: 'email-builder',     name: 'Email Builder',        desc: 'Drag-drop email template generator.',                        icon: '✉️',  url: '#', section: 'live',    access: 'public',    stage: '', category: 'Marketing', notes: '', favicon: null },
-  { id: 'brand-kit',         name: 'Brand Kit',            desc: 'Logos, colors, tokens — single source of truth.',            icon: '🎨', url: '#', section: 'live',    access: 'protected', stage: '', category: 'Marketing', notes: '', favicon: null },
-  { id: 'seo-auditor',       name: 'SEO Auditor',          desc: 'Quick site audits with exportable reports.',                 icon: '🔍', url: '#', section: 'live',    access: 'protected', stage: '', category: 'SEO', notes: '', favicon: null },
+  { id: 'intake-hub',        name: 'Intake Hub',           desc: 'Client intake workspace — plans, research, tasks.',          icon: '📋', url: '#', section: 'live',    access: 'protected', audience: 'internal', clientName: '', stage: '', category: 'Client Ops', notes: '', favicon: null },
+  { id: 'client-dashboard',  name: 'Client Dashboard',     desc: 'Campaign performance reports for clients.',                  icon: '📊', url: '#', section: 'live',    access: 'protected', audience: 'client', clientName: '', stage: '', category: 'Reporting', notes: '', favicon: null },
+  { id: 'email-builder',     name: 'Email Builder',        desc: 'Drag-drop email template generator.',                        icon: '✉️',  url: '#', section: 'live',    access: 'public',    audience: 'public', clientName: '', stage: '', category: 'Marketing', notes: '', favicon: null },
+  { id: 'brand-kit',         name: 'Brand Kit',            desc: 'Logos, colors, tokens — single source of truth.',            icon: '🎨', url: '#', section: 'live',    access: 'protected', audience: 'internal', clientName: '', stage: '', category: 'Marketing', notes: '', favicon: null },
+  { id: 'seo-auditor',       name: 'SEO Auditor',          desc: 'Quick site audits with exportable reports.',                 icon: '🔍', url: '#', section: 'live',    access: 'protected', audience: 'internal', clientName: '', stage: '', category: 'SEO', notes: '', favicon: null },
   // Beta
-  { id: 'ai-reports',        name: 'AI Report Generator',  desc: 'Auto-pull GA4 data → monthly client report drafts via Claude.', icon: '🤖', url: '#', section: 'beta', access: 'protected', stage: 'building',  notes: '<ul><li>Connect GA4 API for traffic + conversion pulls</li><li>Template per client type (ecom / lead-gen / local)</li><li>Export to branded PDF</li></ul>', favicon: null },
-  { id: 'client-portal-v2',  name: 'Client Portal v2',     desc: 'White-label client portal with SSO and custom domain.',      icon: '🏠', url: '#', section: 'beta',    access: 'protected', stage: 'designing', notes: '<ul><li>White-label subdomain support</li><li>Google SSO for client login</li><li>Embed existing dashboard + reports</li></ul>', favicon: null },
-  { id: 'proposal-builder',  name: 'Proposal Builder',     desc: 'AI-assisted proposal generator from a discovery call brief.', icon: '📝', url: '#', section: 'beta',   access: 'protected', stage: 'concept',   notes: '<p>Paste discovery notes → AI drafts scope, pricing, timeline. Export to branded PDF or Notion.</p>', favicon: null },
-  { id: 'competitor-tracker',name: 'Competitor Tracker',   desc: 'Weekly automated competitor analysis — SEO, ads, content.',  icon: '📈', url: '#', section: 'beta',    access: 'protected', stage: 'testing',   notes: '', favicon: null },
-  { id: 'link-monitor',      name: 'Link Monitor',         desc: 'Broken link + redirect checker with weekly email digest.',   icon: '🔗', url: '#', section: 'beta',    access: 'protected', stage: 'beta',      notes: '', favicon: null },
+  { id: 'ai-reports',        name: 'AI Report Generator',  desc: 'Auto-pull GA4 data → monthly client report drafts via Claude.', icon: '🤖', url: '#', section: 'beta', access: 'protected', audience: 'internal', clientName: '', stage: 'building',  notes: '<ul><li>Connect GA4 API for traffic + conversion pulls</li><li>Template per client type (ecom / lead-gen / local)</li><li>Export to branded PDF</li></ul>', favicon: null },
+  { id: 'client-portal-v2',  name: 'Client Portal v2',     desc: 'White-label client portal with SSO and custom domain.',      icon: '🏠', url: '#', section: 'beta',    access: 'protected', audience: 'client', clientName: '', stage: 'designing', notes: '<ul><li>White-label subdomain support</li><li>Google SSO for client login</li><li>Embed existing dashboard + reports</li></ul>', favicon: null },
+  { id: 'proposal-builder',  name: 'Proposal Builder',     desc: 'AI-assisted proposal generator from a discovery call brief.', icon: '📝', url: '#', section: 'beta',   access: 'protected', audience: 'internal', clientName: '', stage: 'concept',   notes: '<p>Paste discovery notes → AI drafts scope, pricing, timeline. Export to branded PDF or Notion.</p>', favicon: null },
+  { id: 'competitor-tracker',name: 'Competitor Tracker',   desc: 'Weekly automated competitor analysis — SEO, ads, content.',  icon: '📈', url: '#', section: 'beta',    access: 'protected', audience: 'internal', clientName: '', stage: 'testing',   notes: '', favicon: null },
+  { id: 'link-monitor',      name: 'Link Monitor',         desc: 'Broken link + redirect checker with weekly email digest.',   icon: '🔗', url: '#', section: 'beta',    access: 'protected', audience: 'public', clientName: '', stage: 'beta',      notes: '', favicon: null },
   // Archive
-  { id: 'legacy-email',      name: 'Legacy Email Tool',    desc: 'Old email builder — replaced by Email Builder.',             icon: '📧', url: '#', section: 'archive', access: 'protected', stage: '', notes: '', favicon: null },
-  { id: 'manual-analytics',  name: 'Manual Analytics Sheet', desc: 'Google Sheet reporting — replaced by Client Dashboard.',  icon: '📉', url: '#', section: 'archive', access: 'protected', stage: '', notes: '', favicon: null },
+  { id: 'legacy-email',      name: 'Legacy Email Tool',    desc: 'Old email builder — replaced by Email Builder.',             icon: '📧', url: '#', section: 'archive', access: 'protected', audience: 'internal', clientName: '', stage: '', notes: '', favicon: null },
+  { id: 'manual-analytics',  name: 'Manual Analytics Sheet', desc: 'Google Sheet reporting — replaced by Client Dashboard.',  icon: '📉', url: '#', section: 'archive', access: 'protected', audience: 'internal', clientName: '', stage: '', notes: '', favicon: null },
 ];
 
 const SEED_NOTES = [
@@ -150,6 +215,7 @@ let state = {
   expandedRows: new Set(),
   betaStageFilter: null,
   categoryFilter: null,
+  audienceFilter: null,
   sortOrder: 'manual',
   arrangeMode: false,
 };
@@ -433,6 +499,7 @@ function applyView(id) {
   state.sortOrder = v.sortOrder || 'manual';
   state.betaStageFilter = v.stageFilter || null;
   state.categoryFilter = v.categoryFilter || null;
+  state.audienceFilter = v.audienceFilter || null;
   document.querySelectorAll('.sort-pill').forEach(p =>
     p.classList.toggle('active', p.dataset.sort === state.sortOrder));
   renderApps();
@@ -454,6 +521,7 @@ function saveCurrentView() {
     sortOrder: state.sortOrder,
     stageFilter: state.betaStageFilter,
     categoryFilter: state.categoryFilter,
+    audienceFilter: state.audienceFilter,
   });
   saveSavedViews();
   renderViewsBar();
@@ -489,11 +557,13 @@ function filteredApps(section) {
   return state.apps.filter(a => {
     if (a.section !== section) return false;
     if (state.categoryFilter && (a.category || '').trim() !== state.categoryFilter) return false;
+    if (state.audienceFilter && appAudience(a) !== state.audienceFilter) return false;
     if (!state.searchQuery) return true;
     const q = state.searchQuery.toLowerCase();
     return a.name.toLowerCase().includes(q)
       || a.desc.toLowerCase().includes(q)
-      || (a.category || '').toLowerCase().includes(q);
+      || (a.category || '').toLowerCase().includes(q)
+      || (a.clientName || '').toLowerCase().includes(q);
   });
 }
 
@@ -513,6 +583,7 @@ function cardIconHtml(app) {
 
 function renderApps() {
   populateCategoryFilter();
+  renderAudienceFilter();
   const apps = filteredApps(state.section);
   const isEmpty = apps.length === 0 && state.searchQuery;
 
@@ -551,7 +622,7 @@ function renderCardGrid(apps, isEmpty) {
       </div>
       <div class="card-name">${escHtml(app.name)}</div>
       <div class="card-desc">${escHtml(app.desc)}</div>
-      ${app.category && app.category.trim() ? `<div class="card-cats">${categoryBadgeHtml(app.category)}</div>` : ''}
+      <div class="card-cats">${audienceBadgeHtml(app)}${app.category && app.category.trim() ? categoryBadgeHtml(app.category) : ''}</div>
       <div class="card-footer">
         <span class="card-access">${app.access === 'protected' ? '🔑 protected' : '🌐 public'}</span>
         <span class="card-open">Open →</span>
@@ -659,7 +730,7 @@ function renderBetaRows(apps, isEmpty) {
       ${state.arrangeMode ? 'draggable="true"' : ''}>
       <div class="tool-row-header" onclick="${state.arrangeMode ? '' : `toggleRow('${app.id}')`}">
         ${state.arrangeMode ? '<span class="drag-handle" style="opacity:0.6">⠿</span>' : ''}
-        <div class="tool-row-badges">${stageBadge}${app.category && app.category.trim() ? categoryBadgeHtml(app.category) : ''}</div>
+        <div class="tool-row-badges">${stageBadge}${audienceBadgeHtml(app)}${app.category && app.category.trim() ? categoryBadgeHtml(app.category) : ''}</div>
         <div class="tool-row-icon">${cardIconHtml(app)}</div>
         <div class="tool-row-info">
           <span class="tool-row-name">${escHtml(app.name)}</span>
@@ -674,7 +745,7 @@ function renderBetaRows(apps, isEmpty) {
       <div class="tool-row-body">
         <div class="tool-row-detail">
           <div class="tool-row-meta">
-            ${stageChip}${catChip}${accessChip}${urlChip}
+            ${stageChip}${audienceChipHtml(app)}${catChip}${accessChip}${urlChip}
           </div>
           <div class="tool-row-notes">
             <div class="tool-row-notes-label">Notes</div>
@@ -899,6 +970,9 @@ function openAddModal() {
   document.getElementById('tool-favicon').value = '';
   document.getElementById('tool-section').value = state.section === 'ideas' ? 'live' : state.section;
   document.getElementById('tool-access').value  = 'protected';
+  document.getElementById('tool-audience').value = 'internal';
+  document.getElementById('tool-client-name').value = '';
+  syncClientNameField();
   document.getElementById('tool-stage').value   = state.section === 'beta' ? 'concept' : '';
   document.getElementById('tool-category').value = '';
   populateCategoryDatalist();
@@ -922,6 +996,9 @@ function openEditModal(id) {
   document.getElementById('tool-favicon').value = '';
   document.getElementById('tool-section').value = app.section;
   document.getElementById('tool-access').value  = app.access;
+  document.getElementById('tool-audience').value = appAudience(app);
+  document.getElementById('tool-client-name').value = app.clientName || '';
+  syncClientNameField();
   document.getElementById('tool-stage').value   = app.stage || '';
   document.getElementById('tool-category').value = app.category || '';
   populateCategoryDatalist();
@@ -937,6 +1014,13 @@ function closeModal() {
   state.editingAppId = null;
 }
 
+// Show the "Client name" field only when audience = client.
+function syncClientNameField() {
+  const audience = document.getElementById('tool-audience').value;
+  const row = document.getElementById('tool-client-name-row');
+  if (row) row.classList.toggle('hidden', audience !== 'client');
+}
+
 function saveTool() {
   const name    = document.getElementById('tool-name').value.trim();
   const desc    = document.getElementById('tool-desc').value.trim();
@@ -944,6 +1028,10 @@ function saveTool() {
   const icon    = document.getElementById('tool-icon').value.trim() || '🔧';
   const section = document.getElementById('tool-section').value;
   const access  = document.getElementById('tool-access').value;
+  const audience = document.getElementById('tool-audience').value;
+  const clientName = audience === 'client'
+    ? document.getElementById('tool-client-name').value.trim()
+    : '';
   const favicon = _pendingFavicon || null;
   const stage   = document.getElementById('tool-stage').value;
   const category = document.getElementById('tool-category').value.trim();
@@ -953,9 +1041,9 @@ function saveTool() {
 
   if (state.editingAppId) {
     const app = state.apps.find(a => a.id === state.editingAppId);
-    if (app) Object.assign(app, { name, desc, url, icon, favicon, section, access, stage, category, notes });
+    if (app) Object.assign(app, { name, desc, url, icon, favicon, section, access, audience, clientName, stage, category, notes });
   } else {
-    state.apps.push({ id: uid(), name, desc, url, icon, favicon, section, access, stage, category, notes });
+    state.apps.push({ id: uid(), name, desc, url, icon, favicon, section, access, audience, clientName, stage, category, notes });
   }
 
   saveApps();
@@ -1498,6 +1586,9 @@ function bindEvents() {
   // Category filter dropdown
   document.getElementById('category-filter').addEventListener('change', e =>
     setCategoryFilter(e.target.value));
+
+  // Audience select in the tool modal → show/hide client-name field
+  document.getElementById('tool-audience').addEventListener('change', syncClientNameField);
 
   // Arrange mode toggle
   document.getElementById('arrange-btn').addEventListener('click', () =>
