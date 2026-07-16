@@ -2,20 +2,20 @@
    ANALYTIX HUB — app.js
 
    Auth is SERVER-SIDE. The password hash is NOT in this file — it lives in the
-   Netlify env var HUB_PASSWORD_HASH. Login POSTs the password to the hub-auth
-   function, which verifies it and returns a signed, expiring token. The hub-data
-   function rejects any request without a valid token. This keeps the hash off
-   the public web and gates all Neon reads/writes.
+   HUB_PASSWORD_HASH env var on the API server. Login POSTs the password to
+   /api/hub-auth, which verifies it and returns a signed, expiring token.
+   /api/hub-data rejects any request without a valid token. This keeps the hash
+   off the public web and gates all DB reads/writes.
 
    To rotate the password: set HUB_PASSWORD_HASH (and HUB_TOKEN_SECRET) in the
-   Netlify site env. Generate a hash in the browser console with:
+   server env. Generate a hash in the browser console with:
      crypto.subtle.digest('SHA-256', new TextEncoder().encode('yourpassword'))
        .then(b => console.log([...new Uint8Array(b)].map(x=>x.toString(16).padStart(2,'0')).join('')))
 ═══════════════════════════════════════════ */
 
 const CONFIG = {
   SESSION_DAYS: 30,
-  AUTH_API:               '/.netlify/functions/hub-auth',
+  AUTH_API:               '/api/hub-auth',
   STORAGE_KEY_AUTH:        'hub_auth',
   STORAGE_KEY_TOKEN:       'hub_token', // signed token from hub-auth, gates Neon calls
   STORAGE_KEY_APPS:        'hub_apps',
@@ -291,7 +291,7 @@ function loadApps() {
 // During local dev (npx serve), the endpoint isn't available — app falls back
 // to localStorage silently. Everything still works offline / locally.
 
-const NEON_API = '/.netlify/functions/hub-data';
+const NEON_API = '/api/hub-data';
 let _neonSyncTimer = null;
 let _neonSyncing = false;
 
@@ -439,7 +439,7 @@ function renderQuickLinks() {
   if (!list) return;
   list.innerHTML = state.quickLinks.map(ql => `
     <div class="quick-link-item">
-      <a href="${escHtml(ql.url)}" target="_blank" rel="noopener" class="quick-link" style="flex:1;min-width:0">${escHtml(ql.label)}</a>
+      <a href="${escHtml(safeUrl(ql.url))}" target="_blank" rel="noopener" class="quick-link" style="flex:1;min-width:0">${escHtml(ql.label)}</a>
       <button class="quick-link-remove" onclick="editQuickLink('${ql.id}')" title="Edit">✎</button>
       <button class="quick-link-remove" onclick="removeQuickLink('${ql.id}')" title="Remove">✕</button>
     </div>
@@ -713,7 +713,7 @@ function renderBetaRows(apps, isEmpty) {
     const expanded = state.expandedRows.has(app.id);
     const stageBadge = stageBadgeHtml(app.stage) || '<span class="stage-badge" style="background:#F3F4F6;color:#9CA3AF">No stage</span>';
     const urlChip = app.url && app.url !== '#'
-      ? `<span class="meta-chip">🔗 <a href="${escHtml(app.url)}" target="_blank" rel="noopener">${escHtml(app.url)}</a></span>`
+      ? `<span class="meta-chip">🔗 <a href="${escHtml(safeUrl(app.url))}" target="_blank" rel="noopener">${escHtml(app.url)}</a></span>`
       : '';
     const accessChip = `<span class="meta-chip">${app.access === 'protected' ? '🔑 Password protected' : '🌐 Public'}</span>`;
     const stageChip = app.stage && STAGES[app.stage]
@@ -723,7 +723,7 @@ function renderBetaRows(apps, isEmpty) {
       ? `<span class="meta-chip">🏷 ${escHtml(app.category.trim())}</span>`
       : '';
     const notesContent = app.notes && app.notes.trim()
-      ? `<div class="tool-row-notes-body">${app.notes}</div>`
+      ? `<div class="tool-row-notes-body">${sanitizeHtml(app.notes)}</div>`
       : `<div class="tool-row-notes-empty">No notes yet — click Edit to add context, links, or progress updates.</div>`;
     return `
     <div class="tool-row ${expanded ? 'expanded' : ''}" id="row-${app.id}" data-id="${app.id}"
@@ -788,7 +788,9 @@ function stripHtml(html) {
 function openTool(id) {
   const app = state.apps.find(a => a.id === id);
   if (!app || !app.url || app.url === '#') return;
-  window.open(app.url, '_blank', 'noopener');
+  const url = safeUrl(app.url);
+  if (url === '#') return;
+  window.open(url, '_blank', 'noopener');
 }
 
 function updateBadges() {
@@ -845,7 +847,7 @@ function selectNote(id) {
   // body stored as HTML; legacy plain-text notes: convert newlines
   const body = note.body || '';
   document.getElementById('note-body').innerHTML =
-    body.includes('<') ? body : body.replace(/\n/g, '<br>');
+    sanitizeHtml(body.includes('<') ? body : body.replace(/\n/g, '<br>'));
 }
 
 function newNote() {
@@ -1002,7 +1004,7 @@ function openEditModal(id) {
   document.getElementById('tool-stage').value   = app.stage || '';
   document.getElementById('tool-category').value = app.category || '';
   populateCategoryDatalist();
-  document.getElementById('tool-notes').innerHTML = app.notes || '';
+  document.getElementById('tool-notes').innerHTML = sanitizeHtml(app.notes || '');
   document.getElementById('modal-delete').classList.remove('hidden');
   setIconPreview(app.favicon, app.icon);
   document.getElementById('modal-overlay').classList.remove('hidden');
@@ -1024,7 +1026,7 @@ function syncClientNameField() {
 function saveTool() {
   const name    = document.getElementById('tool-name').value.trim();
   const desc    = document.getElementById('tool-desc').value.trim();
-  const url     = document.getElementById('tool-url').value.trim();
+  const url     = safeUrl(document.getElementById('tool-url').value.trim());
   const icon    = document.getElementById('tool-icon').value.trim() || '🔧';
   const section = document.getElementById('tool-section').value;
   const access  = document.getElementById('tool-access').value;
@@ -1075,8 +1077,8 @@ function closeQlModal() {
 
 function saveQuickLink() {
   const label = document.getElementById('ql-label').value.trim();
-  const url   = document.getElementById('ql-url').value.trim();
-  if (!label || !url) return;
+  const url   = safeUrl(document.getElementById('ql-url').value.trim());
+  if (!label || !url || url === '#') return;
 
   if (state.editingQuickLinkId) {
     const ql = state.quickLinks.find(q => q.id === state.editingQuickLinkId);
@@ -1484,7 +1486,31 @@ function escHtml(str) {
     .replace(/&/g, '&amp;')
     .replace(/</g, '&lt;')
     .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;');
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
+// Sanitize user-authored rich HTML (notes) before injecting into the DOM.
+// Strips scripts/event handlers; keeps formatting, data: images (screenshots)
+// and data: attachment links (browsers refuse top-level data: navigation, and
+// ours carry `download`). No-op fallback if DOMPurify failed to load.
+function sanitizeHtml(html) {
+  if (!html) return '';
+  if (typeof DOMPurify === 'undefined') return html;
+  return DOMPurify.sanitize(html, {
+    ADD_DATA_URI_TAGS: ['a'],
+    ADD_ATTR: ['download'],
+  });
+}
+
+// Only allow safe URL schemes — blocks javascript:, data:, vbscript: etc.
+// Accepts http(s), mailto, and the '#' placeholder. Anything else → '#'.
+function safeUrl(url) {
+  const u = String(url || '').trim();
+  if (!u || u === '#') return '#';
+  if (/^(https?:|mailto:)/i.test(u)) return u;
+  if (/^[a-z][a-z0-9+.-]*:/i.test(u)) return '#'; // any other scheme → reject
+  return 'https://' + u; // scheme-less ("example.com") → assume https
 }
 
 // ═══════════════════════════════════════════

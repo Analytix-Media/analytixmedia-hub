@@ -7,9 +7,40 @@ const crypto = require('crypto');
 
 const TTL_MS = 30 * 24 * 60 * 60 * 1000; // 30 days — matches the remembered session
 
+// ── Rate limit ──────────────────────────────────────────────────────────────
+// In-memory, per-IP sliding window. On serverless this only persists per warm
+// instance (still slows bursts); on a long-running home-server process it's
+// fully effective. 10 attempts / 15 min per IP.
+const RL_WINDOW_MS = 15 * 60 * 1000;
+const RL_MAX_ATTEMPTS = 10;
+const _attempts = new Map(); // ip → [timestamps]
+
+function rateLimited(ip) {
+  const now = Date.now();
+  const list = (_attempts.get(ip) || []).filter(t => now - t < RL_WINDOW_MS);
+  if (list.length >= RL_MAX_ATTEMPTS) { _attempts.set(ip, list); return true; }
+  list.push(now);
+  _attempts.set(ip, list);
+  // housekeeping so the map can't grow unbounded
+  if (_attempts.size > 1000) {
+    for (const [k, v] of _attempts) {
+      if (!v.some(t => now - t < RL_WINDOW_MS)) _attempts.delete(k);
+    }
+  }
+  return false;
+}
+
+function clientIp(event) {
+  return event.headers['x-nf-client-connection-ip']
+    || (event.headers['x-forwarded-for'] || '').split(',')[0].trim()
+    || 'unknown';
+}
+
+// Same-origin app → CORS can be locked to our own host. Set ALLOWED_ORIGIN
+// (e.g. https://hub.analytixmedia.com) in env; unset = open (local dev).
 const CORS = {
   'Content-Type': 'application/json',
-  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Origin': process.env.ALLOWED_ORIGIN || '*',
   'Access-Control-Allow-Headers': 'Content-Type',
   'Access-Control-Allow-Methods': 'POST, OPTIONS',
 };
@@ -32,6 +63,11 @@ exports.handler = async (event) => {
   if (!secret || !hash) {
     console.error('[hub-auth] missing HUB_TOKEN_SECRET or HUB_PASSWORD_HASH env var');
     return { statusCode: 500, headers: CORS, body: JSON.stringify({ error: 'Auth not configured' }) };
+  }
+
+  const ip = clientIp(event);
+  if (rateLimited(ip)) {
+    return { statusCode: 429, headers: CORS, body: JSON.stringify({ error: 'Too many attempts — try again in 15 minutes' }) };
   }
 
   let password = '';

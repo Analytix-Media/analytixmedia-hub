@@ -6,3 +6,26 @@
   command = "npx serve tools/hub -l 3000"
   port = 3000
   functions = "netlify/functions"
+
+# Transition shims: the client now calls /api/* (works on the self-hosted
+# server.js). These map /api/* to the old functions so the Netlify deploy
+# keeps working until cutover. Delete this whole file after the move.
+[[redirects]]
+  from = "/api/hub-auth"
+  to = "/.netlify/functions/hub-auth"
+  status = 200
+
+[[redirects]]
+  from = "/api/hub-data"
+  to = "/.netlify/functions/hub-data"
+  status = 200
+
+# Security headers — applied to every response by the CDN. When self-hosting,
+# replicate these in your reverse proxy (nginx/caddy) config.
+[[headers]]
+  for = "/*"
+  [headers.values]
+    X-Frame-Options = "DENY"
+    X-Content-Type-Options = "nosniff"
+    Referrer-Policy = "no-referrer"
+    Permissions-Policy = "camera=(), microphone=(), geolocation=()"

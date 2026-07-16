@@ -1,15 +1,23 @@
 const { Pool } = require('pg');
 const crypto = require('crypto');
 
+// TLS: verify certs by default (Neon and any properly configured Postgres pass).
+// For a home-server Postgres on the LAN without TLS, set DB_SSL=off.
+const ssl =
+  process.env.DB_SSL === 'off' ? false :
+  { rejectUnauthorized: true };
+
 const pool = new Pool({
   connectionString: process.env.NEON_DATABASE_URL,
-  ssl: { rejectUnauthorized: false },
+  ssl,
   max: 1, // serverless — keep pool tiny
 });
 
+// Same-origin app → CORS can be locked to our own host. Set ALLOWED_ORIGIN
+// (e.g. https://hub.analytixmedia.com) in env; unset = open (local dev).
 const CORS = {
   'Content-Type': 'application/json',
-  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Origin': process.env.ALLOWED_ORIGIN || '*',
   'Access-Control-Allow-Headers': 'Content-Type, Authorization',
   'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
 };
@@ -92,7 +100,8 @@ exports.handler = async (event) => {
 
   } catch (err) {
     console.error('[hub-data]', err.message);
-    return { statusCode: 500, headers: CORS, body: JSON.stringify({ error: err.message }) };
+    // Generic message to the client — DB error details stay in server logs.
+    return { statusCode: 500, headers: CORS, body: JSON.stringify({ error: 'Server error' }) };
   } finally {
     if (client) client.release();
   }
